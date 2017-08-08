@@ -1,0 +1,6 @@
+*.dat
+.idea
+*.db
+*.db-journal
+*.swp
+venv
