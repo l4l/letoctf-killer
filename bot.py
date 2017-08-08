@@ -1,11 +1,25 @@
 from telegram.ext import Updater, CommandHandler
 from re import match
 from time import time
+from random import randint
 import sqlite3
 
 DATABASE = "t.db"
 master = 117543374
 timeout = 5  # timeout for wrong killing code
+
+
+kill_msgs = ["Цель повержена, осталось ее закопать!",
+             "Жертва медленно истекает кровью у тебя на руках",
+             "Кажется 14 пуля была лишней. В любом случае стоит найти новую жертву",
+             "Порой даже обидно, что это вышло так просто",
+             "Хмм, может быть в следующий раз стоит сэкономить патроны?",
+             "Хорошие люди гибнут в паутине истории, а остальные присваивают чужое.",
+             "Лучше быть счастливым в этой жизни, чем мечтать о счастье в следующей! Покойся с миром!",
+             "Мне кажется, вас надо немного укоротить. Ровно на одну голову!",
+             "Одна голова хорошо. А на плечах — еще лучше.",
+             "В мертвом теле — здоровый дух!",
+             "Я бью два раза: один — по голове, второй — по крышке гроба!"]
 
 
 def log(bot, msg):
@@ -91,6 +105,8 @@ def kill(bot, update, args):
         con.execute("UPDATE aims SET aim=? WHERE user_pass=?", (aim_of_aim, killer))
         con.execute("INSERT INTO kills VALUES (?,?,?)", (killer, aim, int(time() * 1000)))
         con.commit()
+
+        update.message.reply_text(kill_msgs[randint(0, len(kill_msgs) - 1)])
 
         tg = con.execute("SELECT tg_id FROM info WHERE pass=?", (aim,)).fetchone()
         if tg is None:
