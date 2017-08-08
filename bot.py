@@ -33,8 +33,9 @@ def start(_, update):
                               '\nНапишите /login <code> чтобы зайти в игру (p.s <code>: r\'[A-Z0-9]{9}\')')
 
 
-def login(_, update, args):
+def login(bot, update, args):
     user_id = str(update.message.chat_id)
+    log(bot, "Attempt to login from {} with args \'{}\'".format(user_id, args))
     if len(args) != 1:
         update.message.reply_text("Используйте: /login <code>")
         return
@@ -75,6 +76,7 @@ def target(bot, update):
 
 def kill(bot, update, args):
     user_id = str(update.message.chat_id)
+    log(bot, "Attempt to kill from {} with args \'{}\'".format(user_id, args))
 
     if len(args) != 1 or match(r'[A-Z0-9]{9}', args[0]) is None:
         update.message.reply_text("Используйте: /kill [A-Z0-9]{9}")
@@ -107,6 +109,7 @@ def kill(bot, update, args):
         con.commit()
 
         update.message.reply_text(kill_msgs[randint(0, len(kill_msgs) - 1)])
+        log(bot, "{} killed {}".format(killer, aim))
 
         tg = con.execute("SELECT tg_id FROM info WHERE pass=?", (aim,)).fetchone()
         if tg is None:
@@ -145,7 +148,7 @@ def top(_, update):
                           "  (SELECT fio FROM names WHERE names.pass=kills.pass),"
                           "  count(killed_pass) "
                           "FROM kills GROUP BY pass ORDER BY count(killed_pass) DESC;")
-        s = "Текущий топ5 киллеров:\n\n"
+        s = "Текущий топ-5 киллеров:\n\n"
         for c in cur:
             try:
                 s += '\t' + c[0] + " " + str(c[1]) + '\n'
