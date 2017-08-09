@@ -142,27 +142,41 @@ def stat(_, update):
         update.message.reply_text(msg.format(kills))
 
 
-def top(_, update):
+def top(con):
+    cur = con.execute("SELECT "
+                      "  (SELECT fio FROM names WHERE names.pass=kills.pass),"
+                      "  count(killed_pass) "
+                      "FROM kills GROUP BY pass ORDER BY count(killed_pass) DESC LIMIT 5;")
+    s = ""
+    for c in cur:
+        try:
+            s += '\t' + c[0] + " " + str(c[1]) + '\n'
+        except:
+            break
+    return s
+
+
+def overview(_, update):
     with sqlite3.connect(DATABASE) as con:
-        cur = con.execute("SELECT "
-                          "  (SELECT fio FROM names WHERE names.pass=kills.pass),"
-                          "  count(killed_pass) "
-                          "FROM kills GROUP BY pass ORDER BY count(killed_pass) DESC;")
-        s = "Текущий топ-5 киллеров:\n\n"
-        for c in cur:
-            try:
-                s += '\t' + c[0] + " " + str(c[1]) + '\n'
-            except:
-                break
-        update.message.reply_text(s)
+        names = con.execute("SELECT count(*) FROM names;").fetchone()[0]
+        signup = con.execute("SELECT count(*) FROM info;").fetchone()[0]
+        killed = con.execute("SELECT count(*) FROM kills;").fetchone()[0]
+        best = top(con)
+    s = "Статистика по игре:\n" \
+        "\tигроков всего: {}\n" \
+        "\tзарегистрировшихся: {}\n" \
+        "\tубитых: {}\n" \
+        "\ttop-5:\n{}".format(names, signup, killed, best)
+    update.message.reply_text(s)
 
 
 def contact(_, update):
     update.message.reply_text("Если что-то пошло не так можно обратиться к @kitsu")
 
 
-def help(_, update):
-    update.message.reply_text("Игровые команды: target, kill, stat, top\n"
+def bot_help(_, update):
+    update.message.reply_text("Игровые команды: target, kill, stat, overview\n"
+                              "Некоторые команды доступны по первой букве\n"
                               "При возникновении проблем смотрите в /contact")
 
 
@@ -172,12 +186,16 @@ updater = Updater('406219111:AAEpkp-IK1IJI1ZrMKS7uisY_2RUMBDs0d8')
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('login', login, pass_args=True))
 updater.dispatcher.add_handler(CommandHandler('target', target))
+updater.dispatcher.add_handler(CommandHandler('t', target))
 updater.dispatcher.add_handler(CommandHandler('kill', kill, pass_args=True))
+updater.dispatcher.add_handler(CommandHandler('k', kill, pass_args=True))
 updater.dispatcher.add_handler(CommandHandler('stat', stat))
-updater.dispatcher.add_handler(CommandHandler('top', top))
+updater.dispatcher.add_handler(CommandHandler('overview', overview))
+updater.dispatcher.add_handler(CommandHandler('o', overview))
 updater.dispatcher.add_handler(CommandHandler('contact', contact))
-updater.dispatcher.add_handler(CommandHandler('help', help))
-updater.dispatcher.add_handler(CommandHandler('h', help))
+updater.dispatcher.add_handler(CommandHandler('c', contact))
+updater.dispatcher.add_handler(CommandHandler('help', bot_help))
+updater.dispatcher.add_handler(CommandHandler('h', bot_help))
 
 updater.start_polling()
 updater.idle()
