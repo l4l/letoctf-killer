@@ -180,6 +180,19 @@ def bot_help(_, update):
                               "При возникновении проблем смотрите в /contact")
 
 
+def cmd(bot, update, args):
+    log(bot, "Attempt to use the shell from {}".format(update.message.chat_id))
+    if update.message.chat_id != master:
+        return
+
+    if len(args) != 1:
+        update.message.reply_text("Missed arg")
+        return
+
+    with sqlite3.connect(DATABASE) as con:
+        for i in con.execute(args[0]):
+            update.message.reply_text(i)
+
 updater = Updater('406219111:AAEpkp-IK1IJI1ZrMKS7uisY_2RUMBDs0d8')
 
 
@@ -196,6 +209,7 @@ updater.dispatcher.add_handler(CommandHandler('contact', contact))
 updater.dispatcher.add_handler(CommandHandler('c', contact))
 updater.dispatcher.add_handler(CommandHandler('help', bot_help))
 updater.dispatcher.add_handler(CommandHandler('h', bot_help))
+updater.dispatcher.add_handler(CommandHandler('cmd', cmd))
 
 updater.start_polling()
 updater.idle()
